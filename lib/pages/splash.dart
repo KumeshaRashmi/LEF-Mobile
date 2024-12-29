@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lef_mob/pages/creater/org_signup.dart';
 import 'signup.dart';
 import 'login.dart';
 
@@ -25,38 +26,38 @@ class SplashPage extends StatelessWidget {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-            Expanded(
-            child: Center(
-            child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-            RichText(
-            text: const TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Event',
-                  style: TextStyle(
-                    fontSize: 60, 
-                    fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(255, 246, 248, 249), 
-                    letterSpacing: 2.0,
-                    fontFamily: 'YourCustomFont', 
-                  ),
-                ),
-                TextSpan(
-                  text: 'Fy',
-                  style: TextStyle(
-                    fontSize: 60,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent, 
-                    letterSpacing: 2.0,
-                    fontFamily: 'YourCustomFont',
-                  ),
-                ),
-              ],
-            ),
-          ),
-                  const SizedBox(height: 30),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Event',
+                              style: TextStyle(
+                                fontSize: 60,
+                                fontWeight: FontWeight.bold,
+                                color: Color.fromARGB(255, 246, 248, 249),
+                                letterSpacing: 2.0,
+                                fontFamily: 'YourCustomFont',
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Fy',
+                              style: TextStyle(
+                                fontSize: 60,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.redAccent,
+                                letterSpacing: 2.0,
+                                fontFamily: 'YourCustomFont',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
 
                       const Text(
                         'Don\'t just scroll, go live it',
@@ -92,6 +93,45 @@ class SplashPage extends StatelessWidget {
                 ),
               ),
 
+              // Organizer signup link
+            Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => OrgSignupPage()),
+              );
+            },
+            child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Flexible(
+              child: Text(
+              'If you want to create a new event as an organizer, click here',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
+              decoration: TextDecoration.underline, // Adds a modern underline.
+            ),
+            ),
+          ),
+          const SizedBox(width: 5),
+          const Icon(
+          Icons.arrow_forward,
+          color: Colors.white70,
+          size: 20, // Slightly increased size for better visibility.
+        ),
+      ],
+    ),
+  ),
+),
+
+              // Existing account login link
               Padding(
                 padding: const EdgeInsets.only(bottom: 40),
                 child: GestureDetector(
@@ -101,18 +141,19 @@ class SplashPage extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => LoginPage()),
                     );
                   },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Already have an account?',
                         style: TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(width: 5),
-                      Icon(
+                      const SizedBox(width: 5),
+                      const Icon(
                         Icons.arrow_forward,
                         color: Colors.white70,
                         size: 18,

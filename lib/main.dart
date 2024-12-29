@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lef_mob/pages/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
- // Import the splash page
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: const SplashPage(),  // Set SplashPage as the initial page
+      home: const SplashPage(),  
     );
   }
 }

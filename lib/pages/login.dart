@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:lef_mob/pages/forgot_password.dart';
-import 'signup.dart';
-import 'home.dart';
+import 'package:lef_mob/pages/home.dart';
+import 'package:lef_mob/pages/signup.dart';
 
+
+import 'resetpassword.dart';
 
 class LoginPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
@@ -89,7 +90,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFF1F0),
+      backgroundColor: const Color.fromARGB(255, 255, 243, 240),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
@@ -123,14 +124,14 @@ class LoginPage extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                      MaterialPageRoute(builder: (context) => ResetPasswordPage()),
                     );
                   },
                   child: const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
                     child: Text(
                       'Forgot Password?',
-                      style: TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Color.fromARGB(255, 255, 100, 100), fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -139,7 +140,7 @@ class LoginPage extends StatelessWidget {
 
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: const Color.fromARGB(255, 254, 93, 93),
                   padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
@@ -164,7 +165,7 @@ class LoginPage extends StatelessWidget {
               const SizedBox(height: 15),
 
               OutlinedButton.icon(
-                icon: Image.asset('lib/assets/google.jpg', width: 24), // Google icon
+                icon: Image.asset('lib/assets/google.jpg', width: 24), 
                 label: const Text(
                   'Continue with Google',
                   style: TextStyle(fontSize: 16, color: Colors.black87),
@@ -187,7 +188,7 @@ class LoginPage extends StatelessWidget {
                     },
                     child: const Text(
                       'Sign Up',
-                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Color.fromARGB(255, 251, 87, 87), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -221,4 +222,4 @@ class LoginPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

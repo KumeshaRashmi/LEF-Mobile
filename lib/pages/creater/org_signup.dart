@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:lef_mob/pages/home.dart';
+import 'package:lef_mob/pages/creater/org_home.dart';
 import 'package:lef_mob/pages/login.dart';
 
 
-class SignupPage extends StatelessWidget {
+class OrgSignupPage extends StatelessWidget {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
-  SignupPage({super.key});
+  OrgSignupPage({super.key});
 
   // Register user with Firebase
   Future<void> _register(BuildContext context) async {
@@ -51,7 +51,7 @@ class SignupPage extends StatelessWidget {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => Home(
+          builder: (context) => OrgHomePage(
             profileImageUrl: '', 
             displayName: fullNameController.text.trim(),
             email: email,
@@ -85,7 +85,7 @@ class SignupPage extends StatelessWidget {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => Home(
+            builder: (context) => OrgHomePage(
               profileImageUrl: user.photoURL ?? '',
               displayName: user.displayName ?? 'No Name',
               email: user.email ?? 'No Email',
@@ -112,7 +112,7 @@ class SignupPage extends StatelessWidget {
             children: [
               const SizedBox(height: 50),
               const Text(
-                'Welcome to EventFy!',
+                'Welcome Creaters to EventFy!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 30),

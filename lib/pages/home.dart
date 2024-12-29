@@ -1,8 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lef_mob/pages/favourites.dart';
 import 'package:lef_mob/pages/profile.dart';
 import 'package:lef_mob/pages/setting.dart';
-//import 'eventdetails.dart'; // Import the EventDetailsPage
+import 'eventdetails.dart';
 
 class Home extends StatefulWidget {
   final String profileImageUrl;
@@ -10,11 +11,11 @@ class Home extends StatefulWidget {
   final String email;
 
   const Home({
-    super.key,
+    Key? key,
     required this.profileImageUrl,
     required this.displayName,
     required this.email,
-  });
+  }) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
@@ -22,6 +23,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  final List<Map<String, dynamic>> _favoriteEvents = [];
 
   late final List<Widget> _pages;
 
@@ -29,15 +31,36 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _pages = <Widget>[
-      const HomePageContent(),
+      HomePageContent(
+        onFavorite: _addFavorite,
+        displayName: widget.displayName,
+        profileImageUrl: widget.profileImageUrl,
+  ),
       ProfilePage(
         profileImageUrl: widget.profileImageUrl,
         displayName: widget.displayName,
         email: widget.email,
       ),
       const AccountSettingsPage(),
-      const FavoritesPage(),
+      FavoritesPage(
+        favoriteEvents: _favoriteEvents,
+        removeFavorite: _removeFavorite,
+      ),
     ];
+  }
+
+  void _addFavorite(Map<String, dynamic> event) {
+    if (!_favoriteEvents.contains(event)) {
+      setState(() {
+        _favoriteEvents.add(event);
+      });
+    }
+  }
+
+  void _removeFavorite(Map<String, dynamic> event) {
+    setState(() {
+      _favoriteEvents.remove(event);
+    });
   }
 
   void _onItemTapped(int index) {
@@ -46,19 +69,21 @@ class _HomeState extends State<Home> {
     });
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 0,
-        backgroundColor: const Color.fromARGB(255, 15, 14, 14),
+        backgroundColor: const Color.fromARGB(255, 22, 21, 21),
         elevation: 0,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: const Color.fromARGB(255, 255, 81, 0),
+        selectedItemColor: const Color.fromARGB(255, 255, 38, 0),
         unselectedItemColor: const Color.fromARGB(255, 15, 9, 5),
         items: const [
           BottomNavigationBarItem(
@@ -84,7 +109,16 @@ class _HomeState extends State<Home> {
 }
 
 class HomePageContent extends StatefulWidget {
-  const HomePageContent({super.key});
+  final Function(Map<String, dynamic>) onFavorite;
+  final String displayName;
+  final String profileImageUrl;
+
+  const HomePageContent({
+    Key? key,
+    required this.onFavorite,
+    required this.displayName,
+    required this.profileImageUrl,
+  }) : super(key: key);
 
   @override
   _HomePageContentState createState() => _HomePageContentState();
@@ -96,14 +130,32 @@ class _HomePageContentState extends State<HomePageContent> {
   String searchQuery = '';
 
   final List<String> sriLankanLocations = [
+    'All',
     'Colombo',
+    'Gampaha',
+    'Kalutara',
     'Kandy',
+    'Matale',
+    'Nuwara Eliya',
     'Galle',
-    'Jaffna',
     'Matara',
-    'Negombo',
+    'Hambantota',
+    'Jaffna',
+    'Kilinochchi',
+    'Mannar',
+    'Mullaitivu',
+    'Vavuniya',
+    'Batticaloa',
+    'Ampara',
+    'Trincomalee',
+    'Kurunegala',
+    'Puttalam',
     'Anuradhapura',
+    'Polonnaruwa',
+    'Badulla',
+    'Monaragala',
     'Ratnapura',
+    'Kegalle',
   ];
 
   final List<String> eventCategories = [
@@ -138,17 +190,39 @@ class _HomePageContentState extends State<HomePageContent> {
       'ticketPrice': 'Rs.4000',
     },
     {
-      'title': 'Business Conference ',
+      'title': 'Business Conference',
       'dateTime': 'Mon, Jan 3 • 1:00 PM',
       'location': 'Kandy',
       'category': 'Business',
       'image': 'lib/assets/main2.jpg',
-      'description': 'An conference for future businessmans career devlopment.',
+      'description': 'A conference for future businessmen’s career development.',
       'organizer': 'LEO company pvt Ltd.',
       'ticketPrice': 'Rs.4000',
     },
-    // Add other events here with the same structure
+    {
+      'title': 'Food festival',
+      'dateTime': 'Sat, Jan 4 • 5:00 PM',
+      'location': 'Colombo',
+      'category': 'Food',
+      'image': 'lib/assets/main2.jpg',
+      'description': 'A grand showcase of delicious cuisines.',
+      'organizer': 'Foodies Inc.',
+      'ticketPrice': 'Rs.400',
+    },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEvents();
+  }
+
+  void _fetchEvents() async {
+    final snapshot = await FirebaseFirestore.instance.collection('events').get();
+    setState(() {
+      events.addAll(snapshot.docs.map((doc) => doc.data()).toList());
+    });
+  }
 
   List<Map<String, dynamic>> getFilteredEvents() {
     return events.where((event) {
@@ -163,28 +237,62 @@ class _HomePageContentState extends State<HomePageContent> {
   Widget build(BuildContext context) {
     final filteredEvents = getFilteredEvents();
 
-    return SingleChildScrollView(
+  return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Bar
+          Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+                "Welcome, ${widget.displayName.split(' ')[0]} to EventFy",
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.profileImageUrl),
+              radius: 18,
+            ),
+          ],
+        ),
+            const SizedBox(height: 16),
+            // Search bar and dropdowns
             Padding(
               padding: const EdgeInsets.only(bottom: 15),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: 'Search events...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+              child: Row(
+                children: [
+                  Text(
+                    'Ef',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          searchQuery = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search events...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             // Dropdowns for Location and Category
@@ -195,10 +303,29 @@ class _HomePageContentState extends State<HomePageContent> {
                     value: selectedLocation,
                     decoration: InputDecoration(
                       labelText: 'Select Location',
+                      floatingLabelStyle: TextStyle(
+                      color: Colors.red, 
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(
+                        color: Colors.grey, // Default border color
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                      color: Colors.red, // Border color when focused
+                      width: 1.0,
                       ),
                     ),
+                    enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                    color: Colors.grey, // Border color when not focused
+                    ),
+                    ),
+                  ),
                     items: sriLankanLocations.map((location) {
                       return DropdownMenuItem(
                         value: location,
@@ -214,29 +341,55 @@ class _HomePageContentState extends State<HomePageContent> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: selectedCategory,
-                    decoration: InputDecoration(
-                      labelText: 'Select Category',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    items: eventCategories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedCategory = value!;
-                      });
-                    },
+                child: DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: InputDecoration(
+                  labelText: 'Select Category',
+                  floatingLabelStyle: TextStyle(
+                  color: Colors.red, 
+                ),
+      
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                  color: Colors.grey, // Default border color
                   ),
                 ),
-              ],
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                  color: Colors.red, // Border color when focused
+                  width: 1.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                 color: Colors.grey, // Border color when not focused
+                  ),
+                ),
+              ),
+              items: eventCategories.map((category) {
+                return DropdownMenuItem(
+                value: category,
+                child: Text(
+                category,
+                style: TextStyle(
+                  color: Colors.black, // Text color for dropdown items
+                  ),
+                ),
+              );
+              }).toList(),
+              onChanged: (value) {
+              setState(() {
+              selectedCategory = value!; // Update selected category
+              });
+            },
+              dropdownColor: Colors.white, // Background color for dropdown
+              ),
             ),
+          ],
+        ),
             const SizedBox(height: 20),
             const Text(
               'Discover Events',
@@ -270,7 +423,10 @@ class _HomePageContentState extends State<HomePageContent> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => EventDetailsPage(event: event),
+              builder: (context) => EventDetailsPage(
+                event: event,
+                addFavorite: widget.onFavorite,
+              ),
             ),
           );
         },
@@ -290,97 +446,24 @@ class _HomePageContentState extends State<HomePageContent> {
                 children: [
                   Text(
                     event['title'],
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text(event['dateTime'], style: const TextStyle(fontSize: 14)),
+                  Text(event['dateTime']),
                   const SizedBox(height: 4),
-                  Text(event['location'], style: const TextStyle(fontSize: 14)),
+                  Text(event['location']),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Category: ${event['category']}',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class EventDetailsPage extends StatelessWidget {
-  final Map<String, dynamic> event;
-
-  const EventDetailsPage({super.key, required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Event Details'),
-        backgroundColor: Colors.orange,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(
-                event['image'],
-                fit: BoxFit.cover,
-                height: 250,
-                width: double.infinity,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                event['title'],
-                style: const TextStyle(
-                    fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                event['dateTime'],
-                style: const TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Location: ${event['location']}',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                event['description'],
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Organizer: ${event['organizer']}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Ticket Price: ${event['ticketPrice']}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    onPressed: () {
-                      // Add event to favorites functionality here
-                    },
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle "Get Ticket" action here
-                    },
-                    child: const Text('Get Ticket'),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

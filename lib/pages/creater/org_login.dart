@@ -2,100 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:lef_mob/pages/home.dart';
-import 'package:lef_mob/pages/login.dart';
+import 'package:lef_mob/pages/creater/org_home.dart';
+import 'package:lef_mob/pages/creater/org_signup.dart';
 
 
-class SignupPage extends StatelessWidget {
-  final TextEditingController fullNameController = TextEditingController();
+//import 'resetpassword.dart';
+
+class OrgLoginPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
 
-  SignupPage({super.key});
+  OrgLoginPage({super.key});
 
-  // Register user with Firebase
-  Future<void> _register(BuildContext context) async {
+  Future<void> _signInWithEmail(BuildContext context) async {
     final String email = emailController.text.trim();
     final String password = passwordController.text.trim();
-    final String confirmPassword = confirmPasswordController.text.trim();
-
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
-      return;
-    }
-
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password must be at least 6 characters long")),
-      );
-      return;
-    }
 
     try {
-    UserCredential userCredential = await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: password);
-    
-    // Save user details in Firestore
-    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-      'fullName': fullNameController.text.trim(),
-      'email': email,
-      'phone': phoneController.text.trim(),
-      'profileImageUrl': '', 
-    });
-    
-      // Navigate to Home page if successful
+      // Sign in with email and password
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+    // Fetch user details from Firestore
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).get();
+
+    if (userDoc.exists) {
+      var userData = userDoc.data() as Map<String, dynamic>;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => Home(
-            profileImageUrl: '', 
-            displayName: fullNameController.text.trim(),
-            email: email,
+          builder: (context) => OrgHomePage(
+            profileImageUrl: userData['profileImageUrl'] ?? '',
+            displayName: userData['fullName'] ?? 'No Name',
+            email: userData['email'] ?? 'No Email',
           ),
         ),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Registration failed: $e")),
-      );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Sign In failed: $e")),
+    );
   }
+}
 
-  // Google Sign-In
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
+      // Initialize Google Sign-In
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-      User? user = userCredential.user;
-
-      if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Home(
-              profileImageUrl: user.photoURL ?? '',
-              displayName: user.displayName ?? 'No Name',
-              email: user.email ?? 'No Email',
-            ),
-          ),
+      if (googleUser != null) {
+        // Authenticate with Firebase
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
         );
+
+        // Sign in to Firebase
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // Navigate to Home page and pass user details
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrgHomePage(
+                profileImageUrl: user.photoURL ?? '',
+                displayName: user.displayName ?? 'No Name',
+                email: user.email ?? 'No Email',
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
+      // Display error message if sign-in fails
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Google Sign-In failed: $e")),
+        SnackBar(content: Text('Google Sign-In failed: $e')),
       );
     }
   }
@@ -112,17 +99,10 @@ class SignupPage extends StatelessWidget {
             children: [
               const SizedBox(height: 50),
               const Text(
-                'Welcome to EventFy!',
+                'Welcome Back Creaters!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 30),
-
-              _buildTextField(
-                controller: fullNameController,
-                hintText: 'Full Name',
-                icon: Icons.person_outline,
-              ),
-              const SizedBox(height: 15),
 
               _buildTextField(
                 controller: emailController,
@@ -132,42 +112,26 @@ class SignupPage extends StatelessWidget {
               const SizedBox(height: 15),
 
               _buildTextField(
-                controller: phoneController,
-                hintText: 'Phone',
-                icon: Icons.phone_outlined,
-              ),
-              const SizedBox(height: 15),
-
-              _buildTextField(
                 controller: passwordController,
                 hintText: 'Password',
                 icon: Icons.lock_outline,
                 obscureText: true,
               ),
-              const SizedBox(height: 15),
 
-              _buildTextField(
-                controller: confirmPasswordController,
-                hintText: 'Confirm Password',
-                icon: Icons.lock_outline,
-                obscureText: true,
-              ),
               const SizedBox(height: 30),
 
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 248, 98, 98),
+                  backgroundColor: const Color.fromARGB(255, 254, 93, 93),
                   padding: const EdgeInsets.symmetric(horizontal: 80, vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () => _register(context),
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
+                onPressed: () => _signInWithEmail(context),
+                child: const Text('Sign In', style: TextStyle(fontSize: 18, color: Colors.white)),
               ),
+
               const SizedBox(height: 15),
 
               const Row(
@@ -183,32 +147,30 @@ class SignupPage extends StatelessWidget {
               const SizedBox(height: 15),
 
               OutlinedButton.icon(
-                icon: Image.asset('lib/assets/google.jpg', width: 24),
+                icon: Image.asset('lib/assets/google.jpg', width: 24), 
                 label: const Text(
                   'Continue with Google',
                   style: TextStyle(fontSize: 16, color: Colors.black87),
                 ),
                 onPressed: () => _signInWithGoogle(context),
               ),
+
               const SizedBox(height: 20),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Already have an account? ',
-                    style: TextStyle(color: Colors.black54),
-                  ),
+                  const Text("Don't have an account? ", style: TextStyle(color: Colors.black54)),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
+                        MaterialPageRoute(builder: (context) => OrgSignupPage()),
                       );
                     },
                     child: const Text(
-                      'Sign In',
-                      style: TextStyle(color: Color.fromARGB(255, 249, 101, 101), fontWeight: FontWeight.bold),
+                      'Sign Up',
+                      style: TextStyle(color: Color.fromARGB(255, 251, 87, 87), fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
