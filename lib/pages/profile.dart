@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lef_mob/pages/favourites.dart';
 import 'setting.dart';
 import 'eventcalender.dart';
 
@@ -71,10 +72,9 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   buildMenuItem(context, 'Account settings'),
                   buildMenuItem(context, 'Favorites'),
-                  buildMenuItem(context, 'Calendar'), // Calendar navigation
+                  buildMenuItem(context, 'Calendar'),
                   buildMenuItem(context, 'Ticket Issues'),
                   buildMenuItem(context, 'Manage Events'),
-                  buildMenuItem(context, 'Settings'),
                   buildMenuItem(context, 'Map'),
                 ],
               ),
@@ -109,8 +109,16 @@ class ProfilePage extends StatelessWidget {
                   builder: (context) => const EventCalendarPage(),
                 ),
               );
+            } else if (title == 'Favorites') {
+              // Navigate to Favorites page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoritesScreen(),
+                ),
+              );
             } else {
-              // Handle other menu items (e.g., Map or Favorites)
+              // Handle other menu items (e.g., Map or Ticket Issues)
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('$title tapped')),
               );

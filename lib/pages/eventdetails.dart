@@ -1,6 +1,7 @@
-
 import 'package:flutter/material.dart';
-import 'package:lef_mob/pages/eventbooking/booking.dart'; // Import the BookingPage
+import 'package:lef_mob/pages/eventbooking/booking.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final Map<String, dynamic> event;
@@ -18,21 +19,36 @@ class EventDetailsPage extends StatefulWidget {
 
 class _EventDetailsPageState extends State<EventDetailsPage> {
   bool isFavorited = false; // Tracks whether the event is favorited
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void toggleFavorite() {
+  void toggleFavorite() async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
     setState(() {
       isFavorited = !isFavorited;
-      if (isFavorited) {
-        widget.addFavorite(widget.event);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${widget.event['title']} added to favorites!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${widget.event['title']} removed from favorites!')),
-        );
-      }
     });
+
+    if (isFavorited) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favorites')
+          .doc(widget.event['id'])
+          .set(widget.event);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.event['title']} added to favorites!')),
+      );
+    } else {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favorites')
+          .doc(widget.event['id'])
+          .delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.event['title']} removed from favorites!')),
+      );
+    }
   }
 
   void navigateToBookingPage() {
@@ -62,7 +78,6 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     height: 250,
                     width: double.infinity,
                   ),
-                  
                 ],
               ),
               const SizedBox(height: 16),
@@ -124,9 +139,6 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               ),
               const SizedBox(height: 16),
 
-              
-              const SizedBox(height: 16),
-
               // Description Section
               Text(
                 'Program Details:',
@@ -141,13 +153,14 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '\$${widget.event['ticketPrice']} Per Guest',
+                    'Rs.${widget.event['ticketPrice']} Per Guest',
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   ElevatedButton(
                     onPressed: navigateToBookingPage,
                     style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white, backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.red,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -163,3 +176,4 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     );
   }
 }
+

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:io';
 
 class OrgHomePage extends StatefulWidget {
@@ -66,8 +67,7 @@ class _OrgHomePageState extends State<OrgHomePage> {
     'Monaragala',
     'Ratnapura',
     'Kegalle',
-];
-
+  ];
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -75,6 +75,27 @@ class _OrgHomePageState extends State<OrgHomePage> {
       setState(() {
         _eventImage = File(pickedFile.path);
       });
+    }
+  }
+
+  Future<String> _uploadImageToCloudinary(File imageFile) async {
+    const cloudName = 'dwuzpk4cd'; // Replace with your Cloudinary cloud name
+    const uploadPreset = 'localevent'; // Replace with your Cloudinary unsigned upload preset
+
+    final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+    final request = http.MultipartRequest('POST', url);
+
+    request.fields['upload_preset'] = uploadPreset;
+    request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final jsonResponse = json.decode(responseData);
+      return jsonResponse['secure_url'];
+    } else {
+      throw Exception('Failed to upload image to Cloudinary');
     }
   }
 
@@ -95,10 +116,10 @@ class _OrgHomePageState extends State<OrgHomePage> {
     });
 
     try {
-      final storageRef = FirebaseStorage.instance.ref().child('event_images/${DateTime.now().millisecondsSinceEpoch}');
-      await storageRef.putFile(_eventImage!);
-      final imageUrl = await storageRef.getDownloadURL();
+      // Upload image to Cloudinary
+      final imageUrl = await _uploadImageToCloudinary(_eventImage!);
 
+      // Add event details to Firestore
       await FirebaseFirestore.instance.collection('events').add({
         'title': eventNameController.text.trim(),
         'description': eventDescriptionController.text.trim(),
