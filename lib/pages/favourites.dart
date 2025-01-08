@@ -51,11 +51,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: InkWell(
-                      onTap: () => navigateToEventDetails(event), // Navigate on tap
+                      onTap: () => navigateToEventDetails(event),
                       child: Row(
                         children: [
-                          Image.asset(
-                            event['image'] ?? 'assets/placeholder.png', // Fallback image
+                          Image.network(
+                            event['image'] ?? 'assets/placeholder.png',
                             fit: BoxFit.cover,
                             height: 80,
                             width: 80,

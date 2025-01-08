@@ -72,7 +72,7 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
             children: [
               Stack(
                 children: [
-                  Image.asset(
+                  Image.network(
                     widget.event['image'],
                     fit: BoxFit.cover,
                     height: 250,

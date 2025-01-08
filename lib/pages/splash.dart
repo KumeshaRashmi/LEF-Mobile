@@ -116,7 +116,7 @@ class SplashPage extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.5,
-              decoration: TextDecoration.underline, // Adds a modern underline.
+              decoration: TextDecoration.underline,
             ),
             ),
           ),
@@ -124,7 +124,7 @@ class SplashPage extends StatelessWidget {
           const Icon(
           Icons.arrow_forward,
           color: Colors.white70,
-          size: 20, // Slightly increased size for better visibility.
+          size: 20,
         ),
       ],
     ),

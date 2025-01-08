@@ -24,8 +24,10 @@ class OrgHomePage extends StatefulWidget {
 class _OrgHomePageState extends State<OrgHomePage> {
   final TextEditingController eventNameController = TextEditingController();
   final TextEditingController eventDescriptionController = TextEditingController();
-  final TextEditingController eventDateController = TextEditingController();
   final TextEditingController ticketPriceController = TextEditingController();
+
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
 
   String selectedCategory = 'Music';
   String selectedLocation = 'Colombo';
@@ -78,6 +80,34 @@ class _OrgHomePageState extends State<OrgHomePage> {
     }
   }
 
+  Future<void> _selectDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2022),
+      lastDate: DateTime(2030),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        selectedDate = pickedDate;
+      });
+    }
+  }
+
+  Future<void> _selectTime() async {
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        selectedTime = pickedTime;
+      });
+    }
+  }
+
   Future<String> _uploadImageToCloudinary(File imageFile) async {
     const cloudName = 'dwuzpk4cd'; // Replace with your Cloudinary cloud name
     const uploadPreset = 'localevent'; // Replace with your Cloudinary unsigned upload preset
@@ -103,7 +133,8 @@ class _OrgHomePageState extends State<OrgHomePage> {
     if (_eventImage == null ||
         eventNameController.text.isEmpty ||
         eventDescriptionController.text.isEmpty ||
-        eventDateController.text.isEmpty ||
+        selectedDate == null ||
+        selectedTime == null ||
         ticketPriceController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields and select an image.')),
@@ -119,11 +150,20 @@ class _OrgHomePageState extends State<OrgHomePage> {
       // Upload image to Cloudinary
       final imageUrl = await _uploadImageToCloudinary(_eventImage!);
 
+      // Combine date and time into a single DateTime object
+      final eventDateTime = DateTime(
+        selectedDate!.year,
+        selectedDate!.month,
+        selectedDate!.day,
+        selectedTime!.hour,
+        selectedTime!.minute,
+      );
+
       // Add event details to Firestore
       await FirebaseFirestore.instance.collection('events').add({
         'title': eventNameController.text.trim(),
         'description': eventDescriptionController.text.trim(),
-        'dateTime': eventDateController.text.trim(),
+        'dateTime': eventDateTime.toIso8601String(),
         'location': selectedLocation,
         'category': selectedCategory,
         'image': imageUrl,
@@ -138,12 +178,13 @@ class _OrgHomePageState extends State<OrgHomePage> {
 
       eventNameController.clear();
       eventDescriptionController.clear();
-      eventDateController.clear();
       ticketPriceController.clear();
       setState(() {
         _eventImage = null;
         selectedCategory = 'Music';
         selectedLocation = 'Colombo';
+        selectedDate = null;
+        selectedTime = null;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -216,12 +257,34 @@ class _OrgHomePageState extends State<OrgHomePage> {
               },
             ),
             const SizedBox(height: 15),
-            TextField(
-              controller: eventDateController,
-              decoration: const InputDecoration(
-                labelText: 'Event Date (e.g., 2024-12-31)',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    readOnly: true,
+                    onTap: _selectDate,
+                    decoration: InputDecoration(
+                      labelText: selectedDate != null
+                          ? 'Date: ${selectedDate!.toLocal().toString().split(' ')[0]}'
+                          : 'Select Date',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    readOnly: true,
+                    onTap: _selectTime,
+                    decoration: InputDecoration(
+                      labelText: selectedTime != null
+                          ? 'Time: ${selectedTime!.format(context)}'
+                          : 'Select Time',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 15),
             TextField(
@@ -239,6 +302,9 @@ class _OrgHomePageState extends State<OrgHomePage> {
               onPressed: _pickImage,
               icon: const Icon(Icons.image),
               label: const Text('Choose Event Image'),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
             ),
             const SizedBox(height: 15),
             _isUploading
@@ -246,6 +312,10 @@ class _OrgHomePageState extends State<OrgHomePage> {
                 : ElevatedButton(
                     onPressed: _createEvent,
                     child: const Text('Create Event'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.redAccent,
+                    ),
                   ),
           ],
         ),

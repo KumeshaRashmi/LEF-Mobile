@@ -40,7 +40,7 @@ class OrgSignupPage extends StatelessWidget {
         .createUserWithEmailAndPassword(email: email, password: password);
     
     // Save user details in Firestore
-    await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+    await FirebaseFirestore.instance.collection('organizers').doc(userCredential.user!.uid).set({
       'fullName': fullNameController.text.trim(),
       'email': email,
       'phone': phoneController.text.trim(),
@@ -52,7 +52,7 @@ class OrgSignupPage extends StatelessWidget {
         context,
         MaterialPageRoute(
           builder: (context) => OrgHomePage(
-            profileImageUrl: '', 
+            profileImageUrl: '',
             displayName: fullNameController.text.trim(),
             email: email,
           ),
@@ -112,7 +112,7 @@ class OrgSignupPage extends StatelessWidget {
             children: [
               const SizedBox(height: 50),
               const Text(
-                'Welcome Creaters to EventFy!',
+                'Welcome Creators to EventFy!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 30),
