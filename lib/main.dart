@@ -1,20 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:lef_mob/pages/splash.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:lef_mob/pages/splash.dart';
 
+// Function to handle background messages
+@pragma('vm:entry-point') // Ensures this works in background
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase
+      .initializeApp(); // Ensure Firebase is initialized in the background
+  print("Handling a background message: ${message.messageId}");
+}
 
+Future<void> main() async {
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensures proper widget binding before initialization
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyAWe6aFsLl75Iime5I1XIn7WslQZ-GigJ4",
+      authDomain: "lef-mob.firebaseapp.com",
+      projectId: "lef-mob",
+      storageBucket: "lef-mob.firebasestorage.app",
+      messagingSenderId: "425168014990",
+      appId: "1:425168014990:web:e6402ff9d8e095065a83df",
+      measurementId: "G-D6X71STK0T",
+    ),
+  );
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  // Register the background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  runApp(const MyApp()); // Start the app after Firebase is initialized
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -22,8 +43,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      home: const SplashPage(),  
+      home: const SplashPage(), // Home screen of the app (SplashPage)
     );
   }
 }
-

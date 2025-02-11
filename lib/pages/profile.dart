@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'setting.dart';
 import 'eventcalender.dart';
+import 'SettingsPage.dart';
 
 class ProfilePage extends StatelessWidget {
   final String profileImageUrl;
@@ -32,7 +34,7 @@ class ProfilePage extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(width: 40), 
+                const SizedBox(width: 40),
                 CircleAvatar(
                   radius: 40,
                   backgroundImage: profileImageUrl.isNotEmpty
@@ -40,12 +42,49 @@ class ProfilePage extends StatelessWidget {
                       : const AssetImage('lib/assets/profile.png')
                           as ImageProvider,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.notifications, color: Colors.redAccent),
-                  onPressed: () {
-                    // Handle notification tap (e.g., open notifications page)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notifications tapped')),
+                // Notification Icon without Navigation to NotificationsPage
+                StreamBuilder<int>(
+                  stream: _getUnreadNotificationsCount(),
+                  builder: (context, snapshot) {
+                    return Stack(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.notifications,
+                              color: Colors.redAccent),
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Notifications tapped'),
+                              ),
+                            );
+                          },
+                        ),
+                        if (snapshot.hasData && snapshot.data! > 0)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 20,
+                                minHeight: 20,
+                              ),
+                              child: Text(
+                                '${snapshot.data}', // Dynamic unread count
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
                     );
                   },
                 ),
@@ -72,9 +111,9 @@ class ProfilePage extends StatelessWidget {
                   buildMenuItem(context, 'Account settings'),
                   buildMenuItem(context, 'Favorites'),
                   buildMenuItem(context, 'Calendar'), // Calendar navigation
-                  buildMenuItem(context, 'Ticket Issues'),
+                  buildMenuItem(context, 'Tickets Issued'),
                   buildMenuItem(context, 'Manage Events'),
-                  buildMenuItem(context, 'Settings'),
+                  buildMenuItem(context, 'Settings'), // Settings navigation
                   buildMenuItem(context, 'Map'),
                 ],
               ),
@@ -83,6 +122,18 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Stream to get unread notifications count
+  Stream<int> _getUnreadNotificationsCount() {
+    return FirebaseFirestore.instance
+        .collection(
+            'notifications') // Replace with your Firestore collection name
+        .where('userId',
+            isEqualTo: 'currentUserId') // Replace with actual user ID
+        .where('isRead', isEqualTo: false) // Field for unread status
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
   }
 
   // Helper method to build a menu item with navigation handling
@@ -94,12 +145,9 @@ class ProfilePage extends StatelessWidget {
           trailing: const Icon(Icons.arrow_forward_ios, size: 16),
           onTap: () {
             if (title == 'Account settings') {
-              // Navigate to Account Settings page
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AccountSettingsPage(),
-                ),
+              // Navigate to Account Settings page placeholder
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Account settings tapped')),
               );
             } else if (title == 'Calendar') {
               // Navigate to Event Calendar page
@@ -107,6 +155,14 @@ class ProfilePage extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const EventCalendarPage(),
+                ),
+              );
+            } else if (title == 'Settings') {
+              // Navigate to Settings page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsPage(),
                 ),
               );
             } else {
