@@ -37,6 +37,31 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWe6aFsLl75Iime5I1XIn7WslQZ-GigJ4",
+      authDomain: "lef-mob.firebaseapp.com",
+      projectId: "lef-mob",
+      storageBucket: "lef-mob.firebasestorage.app",
+      messagingSenderId: "425168014990",
+      appId: "1:425168014990:web:e6402ff9d8e095065a83df",
+      measurementId: "G-D6X71STK0T"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
+

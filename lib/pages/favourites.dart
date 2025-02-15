@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lef_mob/pages/eventdetails.dart';
 
 class FavoritesPage extends StatefulWidget {
@@ -25,7 +26,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
         builder: (context) => EventDetailsPage(
           event: event,
           addFavorite: (Map<String, dynamic> event) {
-            // Add to favorites logic here if needed
+            // Add to favorites logic if needed
           },
         ),
       ),
@@ -54,7 +55,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       child: Row(
                         children: [
                           Image.asset(
-                            event['image'],
+                            event['image'] ?? 'assets/placeholder.png', // Fallback image
                             fit: BoxFit.cover,
                             height: 80,
                             width: 80,
@@ -65,19 +66,19 @@ class _FavoritesPageState extends State<FavoritesPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  event['title'],
+                                  event['title'] ?? 'No Title',
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(event['dateTime']),
+                                Text(event['dateTime'] ?? 'No Date/Time'),
                                 const SizedBox(height: 4),
-                                Text(event['location']),
+                                Text(event['location'] ?? 'No Location'),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Category: ${event['category']}',
+                                  'Category: ${event['category'] ?? 'N/A'}',
                                   style: TextStyle(color: Colors.grey[600]),
                                 ),
                               ],
@@ -85,13 +86,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                // Immediately remove from UI
-                                widget.favoriteEvents.removeAt(index);
-                              });
-                              // Remove from Firestore and handle background operation
-                              widget.removeFavorite(event);
+                            onPressed: () async {
+                              final eventId = event['id'];
+                              if (eventId != null) {
+                                setState(() {
+                                  widget.favoriteEvents.removeAt(index);
+                                });
+                                await widget.removeFavorite(event);
+                              } else {
+                                print("Error: Event ID is null.");
+                              }
                             },
                           ),
                         ],
@@ -105,7 +109,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
   }
 }
 
-// FavoritesScreen widget - StatefulWidget to manage favorites state
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -115,29 +118,43 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   List<Map<String, dynamic>> favoriteEvents = [];
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   void removeFavorite(Map<String, dynamic> event) async {
-    setState(() {
-      favoriteEvents.remove(event);
-    });
     try {
-      String userId = 'userId'; // Replace this with the actual user ID
-      await _firestore.collection('users').doc(userId).update({
-        'favorites': FieldValue.arrayRemove([event]),
-      });
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favorites')
+          .doc(event['id'])
+          .delete();
     } catch (e) {
       print("Error removing favorite from Firestore: $e");
     }
   }
 
-  void fetchFavoritesFromFirestore(String userId) async {
+  void fetchFavoritesFromFirestore() async {
     try {
-      var snapshot = await _firestore.collection('users').doc(userId).get();
-      if (snapshot.exists) {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      var snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('favorites')
+          .get();
+      if (snapshot.docs.isNotEmpty) {
         setState(() {
-          favoriteEvents = List<Map<String, dynamic>>.from(snapshot.data()?['favorites'] ?? []);
+          favoriteEvents = snapshot.docs
+              .map((doc) {
+                var data = doc.data() as Map<String, dynamic>;
+                data['id'] = doc.id; // Include the Firestore document ID
+                return data;
+              })
+              .toList();
+        });
+      } else {
+        setState(() {
+          favoriteEvents = [];
         });
       }
     } catch (e) {
@@ -148,8 +165,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   void initState() {
     super.initState();
-    String userId = 'userId'; // Replace this with actual user ID from Firebase Auth
-    fetchFavoritesFromFirestore(userId);
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null) {
+        fetchFavoritesFromFirestore();
+      } else {
+        setState(() {
+          favoriteEvents = [];
+        });
+      }
+    });
   }
 
   @override

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:lef_mob/pages/splash.dart';
+import 'package:device_preview/device_preview.dart';
 
 // Function to handle background messages
 @pragma('vm:entry-point') // Ensures this works in background
@@ -30,6 +32,12 @@ Future<void> main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp()); // Start the app after Firebase is initialized
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp( DevicePreview(
+    enabled: !kReleaseMode,
+    builder: (context) => MyApp()));
 }
 
 class MyApp extends StatelessWidget {

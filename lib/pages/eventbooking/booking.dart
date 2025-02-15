@@ -1,4 +1,3 @@
-// filepath: /c:/Users/Asus/Desktop/lef_mob/lib/pages/eventbooking/booking.dart
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
@@ -23,20 +22,31 @@ class _BookingPageState extends State<BookingPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ticketsController = TextEditingController();
+  final TextEditingController _cardHolderNameController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryDateController = TextEditingController();
+  final TextEditingController _expiryMonthController = TextEditingController();
+  final TextEditingController _expiryYearController = TextEditingController();
   final TextEditingController _cvvController = TextEditingController();
   String _cardType = 'Visa';
   String? _qrData;
   final GlobalKey _qrKey = GlobalKey();
 
+  double _ticketPrice = 0.0; // To store the ticket price from the event
+  int _numberOfTickets = 0; // To store the number of tickets entered by the user
+
+  @override
+  void initState() {
+    super.initState();
+    _ticketPrice = double.parse(widget.event['ticketPrice']); // Get the ticket price
+  }
+
   void _confirmBooking() {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _qrData = 'Name: ${_nameController.text}\n'
-                  'Phone: ${_phoneController.text}\n'
-                  'Tickets: ${_ticketsController.text}\n'
-                  'Event: ${widget.event['title']}';
+            'Phone: ${_phoneController.text}\n'
+            'Tickets: ${_ticketsController.text}\n'
+            'Event: ${widget.event['title']}';
       });
     }
   }
@@ -96,7 +106,10 @@ class _BookingPageState extends State<BookingPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your name';
@@ -106,7 +119,10 @@ class _BookingPageState extends State<BookingPage> {
               ),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Telephone Number'),
+                decoration: const InputDecoration(
+                  labelText: 'Telephone Number',
+                  prefixIcon: Icon(Icons.phone),
+                ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -117,21 +133,46 @@ class _BookingPageState extends State<BookingPage> {
               ),
               TextFormField(
                 controller: _ticketsController,
-                decoration: const InputDecoration(labelText: 'Number of Tickets'),
+                decoration: const InputDecoration(
+                  labelText: 'Number of Tickets',
+                  prefixIcon: Icon(Icons.confirmation_number),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the number of tickets';
                   }
+                  final ticketCount = int.tryParse(value);
+                  if (ticketCount == null || ticketCount <= 0) {
+                    return 'Please enter a valid number of tickets';
+                  }
                   return null;
                 },
+                onChanged: (value) {
+                  setState(() {
+                    _numberOfTickets = int.tryParse(value) ?? 0;
+                  });
+                },
               ),
+              const SizedBox(height: 16),
+              if (_numberOfTickets > 0)
+                Text(
+                  'Total Price: Rs. ${(_numberOfTickets * _ticketPrice).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
               const SizedBox(height: 16),
               const Text('Card Payment Details', style: TextStyle(fontWeight: FontWeight.bold)),
               DropdownButtonFormField<String>(
                 value: _cardType,
-                decoration: const InputDecoration(labelText: 'Card Type'),
-                items: ['Visa', 'MasterCard', 'American Express'].map((String value) {
+                decoration: const InputDecoration(
+                  labelText: 'Card Type',
+                  prefixIcon: Icon(Icons.credit_card),
+                ),
+                items: ['Visa', 'MasterCard'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -144,8 +185,24 @@ class _BookingPageState extends State<BookingPage> {
                 },
               ),
               TextFormField(
+                controller: _cardHolderNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Card Holder Name',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the card holder name';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
                 controller: _cardNumberController,
-                decoration: const InputDecoration(labelText: 'Card Number'),
+                decoration: const InputDecoration(
+                  labelText: 'Card Number',
+                  prefixIcon: Icon(Icons.credit_card),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -154,20 +211,57 @@ class _BookingPageState extends State<BookingPage> {
                   return null;
                 },
               ),
-              TextFormField(
-                controller: _expiryDateController,
-                decoration: const InputDecoration(labelText: 'Expiry Date (MM/YY)'),
-                keyboardType: TextInputType.datetime,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the expiry date';
-                  }
-                  return null;
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryMonthController,
+                      decoration: const InputDecoration(
+                        labelText: 'Expiry Month (MM)',
+                        prefixIcon: Icon(Icons.date_range),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the expiry month';
+                        }
+                        final month = int.tryParse(value);
+                        if (month == null || month < 1 || month > 12) {
+                          return 'Please enter a valid month';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryYearController,
+                      decoration: const InputDecoration(
+                        labelText: 'Expiry Year (YY)',
+                        prefixIcon: Icon(Icons.date_range),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the expiry year';
+                        }
+                        final year = int.tryParse(value);
+                        if (year == null || year < 0 || year > 99) {
+                          return 'Please enter a valid year';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               TextFormField(
                 controller: _cvvController,
-                decoration: const InputDecoration(labelText: 'CVV'),
+                decoration: const InputDecoration(
+                  labelText: 'CVV',
+                  prefixIcon: Icon(Icons.lock),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -181,7 +275,8 @@ class _BookingPageState extends State<BookingPage> {
                 child: ElevatedButton(
                   onPressed: _confirmBooking,
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white, backgroundColor: Colors.red, // Text color
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.red,
                   ),
                   child: const Text('Confirm Booking'),
                 ),
@@ -196,16 +291,17 @@ class _BookingPageState extends State<BookingPage> {
                       RepaintBoundary(
                         key: _qrKey,
                         child: QrImageView(
-                          data: _qrData!, // Positional argument for the data
-                          version: QrVersions.auto, // Optional named parameter for the version
-                          size: 200.0, // Optional named parameter for the size
+                          data: _qrData!,
+                          version: QrVersions.auto,
+                          size: 200.0,
                         ),
                       ),
                       const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: _downloadQRCode,
                         style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white, backgroundColor: Colors.red, // Text color
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.red,
                         ),
                         child: const Text('Download QR Code'),
                       ),

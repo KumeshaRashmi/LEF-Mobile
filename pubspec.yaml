@@ -25,6 +25,9 @@ dependencies:
   http: ^1.2.2
   intro_slider: ^4.2.1
   provider: ^6.1.2
+  device_preview: ^1.2.0
+  mime: ^2.0.0
+  
 
 dev_dependencies:
   flutter_test:

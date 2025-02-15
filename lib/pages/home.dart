@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:lef_mob/pages/favourites.dart';
-import 'package:lef_mob/pages/profile.dart';
-import 'package:lef_mob/pages/setting.dart';
 import 'eventdetails.dart';
+import 'favourites.dart';
+import 'profile.dart';
+import 'setting.dart';
 
 class Home extends StatefulWidget {
   final String profileImageUrl;
@@ -23,44 +23,30 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
-  final List<Map<String, dynamic>> _favoriteEvents = [];
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = <Widget>[
+    _pages = [
       HomePageContent(
         onFavorite: _addFavorite,
         displayName: widget.displayName,
         profileImageUrl: widget.profileImageUrl,
-  ),
+      ),
       ProfilePage(
         profileImageUrl: widget.profileImageUrl,
         displayName: widget.displayName,
         email: widget.email,
       ),
       const AccountSettingsPage(),
-      FavoritesPage(
-        favoriteEvents: _favoriteEvents,
-        removeFavorite: _removeFavorite,
-      ),
+      const FavoritesScreen(),
     ];
   }
 
   void _addFavorite(Map<String, dynamic> event) {
-    if (!_favoriteEvents.contains(event)) {
-      setState(() {
-        _favoriteEvents.add(event);
-      });
-    }
-  }
 
-  void _removeFavorite(Map<String, dynamic> event) {
-    setState(() {
-      _favoriteEvents.remove(event);
-    });
   }
 
   void _onItemTapped(int index) {
@@ -69,22 +55,16 @@ class _HomeState extends State<Home> {
     });
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 0,
-        backgroundColor: const Color.fromARGB(255, 22, 21, 21),
+        toolbarHeight: 0, // Hide the AppBar
+        backgroundColor: Colors.white,
         elevation: 0,
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: const Color.fromARGB(255, 255, 38, 0),
-        unselectedItemColor: const Color.fromARGB(255, 15, 9, 5),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -103,6 +83,10 @@ class _HomeState extends State<Home> {
             label: 'Favorites',
           ),
         ],
+        currentIndex: _selectedIndex,
+        selectedItemColor:const Color.fromARGB(255, 250, 67, 67),
+        unselectedItemColor: const Color.fromARGB(255, 130, 128, 128),
+        onTap: _onItemTapped,
       ),
     );
   }
@@ -125,7 +109,7 @@ class HomePageContent extends StatefulWidget {
 }
 
 class _HomePageContentState extends State<HomePageContent> {
-  String selectedLocation = 'Colombo';
+  String selectedLocation = 'All';
   String selectedCategory = 'All';
   String searchQuery = '';
 
@@ -177,7 +161,7 @@ class _HomePageContentState extends State<HomePageContent> {
       'image': 'lib/assets/main1.jpg',
       'description': 'A vibrant music festival with top artists.',
       'organizer': 'Music Inc.',
-      'ticketPrice': 'RS.5000',
+      'ticketPrice': '5000',
     },
     {
       'title': 'Musical show in Colombo',
@@ -187,7 +171,7 @@ class _HomePageContentState extends State<HomePageContent> {
       'image': 'lib/assets/main2.jpg',
       'description': 'An amazing night with live music.',
       'organizer': 'Concerts Ltd.',
-      'ticketPrice': 'Rs.4000',
+      'ticketPrice': '4000',
     },
     {
       'title': 'Business Conference',
@@ -197,7 +181,7 @@ class _HomePageContentState extends State<HomePageContent> {
       'image': 'lib/assets/main2.jpg',
       'description': 'A conference for future businessmen’s career development.',
       'organizer': 'LEO company pvt Ltd.',
-      'ticketPrice': 'Rs.4000',
+      'ticketPrice': '4000',
     },
     {
       'title': 'Food festival',
@@ -207,7 +191,7 @@ class _HomePageContentState extends State<HomePageContent> {
       'image': 'lib/assets/main2.jpg',
       'description': 'A grand showcase of delicious cuisines.',
       'organizer': 'Foodies Inc.',
-      'ticketPrice': 'Rs.400',
+      'ticketPrice': '400',
     },
   ];
 
@@ -220,7 +204,7 @@ class _HomePageContentState extends State<HomePageContent> {
   void _fetchEvents() async {
     final snapshot = await FirebaseFirestore.instance.collection('events').get();
     setState(() {
-      events.addAll(snapshot.docs.map((doc) => doc.data()).toList());
+      events.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
     });
   }
 
@@ -233,7 +217,7 @@ class _HomePageContentState extends State<HomePageContent> {
     }).toList();
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     final filteredEvents = getFilteredEvents();
 
