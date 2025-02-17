@@ -441,21 +441,7 @@ class _HomePageContentState extends State<HomePageContent> {
                       color: Colors.red,
                     ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      widget.onFavorite(event);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Added to favorites")),
-                      );
-                    },
-                    icon: const Icon(Icons.favorite_border),
-                    label: const Text(''),
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ),
