@@ -26,7 +26,7 @@ class OrgLoginPage extends StatelessWidget {
       );
 
     // Fetch user details from Firestore
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).get();
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('organizers').doc(userCredential.user!.uid).get();
 
     if (userDoc.exists) {
       var userData = userDoc.data() as Map<String, dynamic>;
@@ -99,7 +99,7 @@ class OrgLoginPage extends StatelessWidget {
             children: [
               const SizedBox(height: 50),
               const Text(
-                'Welcome Back Creaters!',
+                'Welcome Back Creators!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
               ),
               const SizedBox(height: 30),

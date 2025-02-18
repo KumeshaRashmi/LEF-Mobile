@@ -3,9 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:lef_mob/pages/services/stripe_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class BookingPage extends StatefulWidget {
@@ -31,13 +32,12 @@ class _BookingPageState extends State<BookingPage> {
   String? _qrData;
   final GlobalKey _qrKey = GlobalKey();
 
-  double _ticketPrice = 0.0; // To store the ticket price from the event
-  int _numberOfTickets = 0; // To store the number of tickets entered by the user
-
+  double _ticketPrice = 0.0;
+  int _numberOfTickets = 0;
   @override
   void initState() {
     super.initState();
-    _ticketPrice = double.parse(widget.event['ticketPrice']); // Get the ticket price
+    _ticketPrice = double.parse(widget.event['ticketPrice']);
   }
 
   void _confirmBooking() {
@@ -273,7 +273,9 @@ class _BookingPageState extends State<BookingPage> {
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed: _confirmBooking,
+                  onPressed:(){
+                    StripeService.instance.makePayment();
+                  },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red,
@@ -297,14 +299,6 @@ class _BookingPageState extends State<BookingPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _downloadQRCode,
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.red,
-                        ),
-                        child: const Text('Download QR Code'),
-                      ),
                     ],
                   ),
                 ),

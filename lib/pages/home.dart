@@ -153,46 +153,7 @@ class _HomePageContentState extends State<HomePageContent> {
   ];
 
   final List<Map<String, dynamic>> events = [
-    {
-      'title': 'Music Festival in Colombo',
-      'dateTime': 'Fri, Dec 29 • 06:00 PM',
-      'location': 'Colombo',
-      'category': 'Music',
-      'image': 'lib/assets/main1.jpg',
-      'description': 'A vibrant music festival with top artists.',
-      'organizer': 'Music Inc.',
-      'ticketPrice': '5000',
-    },
-    {
-      'title': 'Musical show in Colombo',
-      'dateTime': 'Fri, Dec 30 • 07:00 PM',
-      'location': 'Colombo',
-      'category': 'Music',
-      'image': 'lib/assets/main2.jpg',
-      'description': 'An amazing night with live music.',
-      'organizer': 'Concerts Ltd.',
-      'ticketPrice': '4000',
-    },
-    {
-      'title': 'Business Conference',
-      'dateTime': 'Mon, Jan 3 • 1:00 PM',
-      'location': 'Kandy',
-      'category': 'Business',
-      'image': 'lib/assets/main2.jpg',
-      'description': 'A conference for future businessmen’s career development.',
-      'organizer': 'LEO company pvt Ltd.',
-      'ticketPrice': '4000',
-    },
-    {
-      'title': 'Food festival',
-      'dateTime': 'Sat, Jan 4 • 5:00 PM',
-      'location': 'Colombo',
-      'category': 'Food',
-      'image': 'lib/assets/main2.jpg',
-      'description': 'A grand showcase of delicious cuisines.',
-      'organizer': 'Foodies Inc.',
-      'ticketPrice': '400',
-    },
+    
   ];
 
   @override
@@ -293,20 +254,20 @@ class _HomePageContentState extends State<HomePageContent> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: const BorderSide(
-                        color: Colors.grey, // Default border color
+                        color: Colors.grey,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: const BorderSide(
-                      color: Colors.red, // Border color when focused
+                      color: Colors.red,
                       width: 1.0,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
-                    color: Colors.grey, // Border color when not focused
+                    color: Colors.grey,
                     ),
                     ),
                   ),
@@ -336,20 +297,20 @@ class _HomePageContentState extends State<HomePageContent> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: const BorderSide(
-                  color: Colors.grey, // Default border color
+                  color: Colors.grey,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: const BorderSide(
-                  color: Colors.red, // Border color when focused
+                  color: Colors.red,
                   width: 1.0,
                   ),
                 ),
                 enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
-                 color: Colors.grey, // Border color when not focused
+                color: Colors.grey,
                   ),
                 ),
               ),
@@ -359,7 +320,7 @@ class _HomePageContentState extends State<HomePageContent> {
                 child: Text(
                 category,
                 style: TextStyle(
-                  color: Colors.black, // Text color for dropdown items
+                  color: Colors.black,
                   ),
                 ),
               );
@@ -387,7 +348,7 @@ class _HomePageContentState extends State<HomePageContent> {
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final event = filteredEvents[index];
-                return buildEventCard(event, context);
+                return buildEventCard(event, context, widget.onFavorite);
               },
             ),
           ],
@@ -396,10 +357,10 @@ class _HomePageContentState extends State<HomePageContent> {
     );
   }
 
-  Widget buildEventCard(Map<String, dynamic> event, BuildContext context) {
+    Widget buildEventCard(Map<String, dynamic> event, BuildContext context, Function(Map<String, dynamic>) onFavorite) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       elevation: 4,
       child: InkWell(
@@ -407,24 +368,24 @@ class _HomePageContentState extends State<HomePageContent> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => EventDetailsPage(
-                event: event,
-                addFavorite: widget.onFavorite,
-              ),
+              builder: (context) => EventDetailsPage(event: event, addFavorite: widget.onFavorite),
             ),
           );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              event['image'],
-              fit: BoxFit.cover,
-              height: 150,
-              width: double.infinity,
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Image.network(
+                event['image'],
+                height: 180,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -436,14 +397,51 @@ class _HomePageContentState extends State<HomePageContent> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(event['dateTime']),
-                  const SizedBox(height: 4),
-                  Text(event['location']),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Category: ${event['category']}',
-                    style: TextStyle(color: Colors.grey[600]),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        event['dateTime'],
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        event['location'],
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    event['description'],
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Rs. ${event['ticketPrice']}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  
                 ],
               ),
             ),
@@ -453,3 +451,4 @@ class _HomePageContentState extends State<HomePageContent> {
     );
   }
 }
+
