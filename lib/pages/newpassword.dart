@@ -5,7 +5,7 @@ import 'login.dart';
 class NewPasswordPage extends StatefulWidget {
   final String email;
 
-  NewPasswordPage({required this.email});
+  const NewPasswordPage({super.key, required this.email});
 
   @override
   _NewPasswordPageState createState() => _NewPasswordPageState();

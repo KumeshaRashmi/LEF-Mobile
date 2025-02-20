@@ -5,7 +5,7 @@ import 'password_reset_confirmation.dart';
 class ResetPasswordPage extends StatefulWidget {
   final String email; // Optional email for additional context
 
-  ResetPasswordPage({required this.email});
+  const ResetPasswordPage({super.key, required this.email});
 
   @override
   _ResetPasswordPageState createState() => _ResetPasswordPageState();

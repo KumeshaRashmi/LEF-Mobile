@@ -27,7 +27,7 @@ android {
         applicationId = "com.example.lef_mob"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = 33
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -47,6 +47,8 @@ flutter {
 }
 
 dependencies {
+    classpath 'com.android.tools.build:gradle:8.2.2'
+    classpath 'com.google.gms:google-services:4.4.2' 
   // Import the Firebase BoM
   implementation platform('com.google.firebase:firebase-bom:33.5.1')
 

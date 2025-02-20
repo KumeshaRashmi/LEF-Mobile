@@ -11,11 +11,11 @@ class Home extends StatefulWidget {
   final String email;
 
   const Home({
-    Key? key,
+    super.key,
     required this.profileImageUrl,
     required this.displayName,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   _HomeState createState() => _HomeState();
@@ -98,11 +98,11 @@ class HomePageContent extends StatefulWidget {
   final String profileImageUrl;
 
   const HomePageContent({
-    Key? key,
+    super.key,
     required this.onFavorite,
     required this.displayName,
     required this.profileImageUrl,
-  }) : super(key: key);
+  });
 
   @override
   _HomePageContentState createState() => _HomePageContentState();
@@ -165,7 +165,7 @@ class _HomePageContentState extends State<HomePageContent> {
   void _fetchEvents() async {
     final snapshot = await FirebaseFirestore.instance.collection('events').get();
     setState(() {
-      events.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+      events.addAll(snapshot.docs.map((doc) => doc.data()).toList());
     });
   }
 

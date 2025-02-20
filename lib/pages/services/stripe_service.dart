@@ -1,19 +1,27 @@
 import 'package:dio/dio.dart';
-import 'package:lef_mob/pages/const.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:lef_mob/pages/const.dart'; // Ensure this file contains 'stripeSecretKey'
 
 class StripeService {
-  StripeService._(); // Singleton instance creation
-
+  StripeService._(); // Singleton instance
   static final StripeService instance = StripeService._();
 
-  Future<void> makePayment() async {
+  Future<bool> makePayment(int totalAmount) async {
     try {
-      String? paymentIntent = await _createPaymentIntent(10, "usd");
-      if (paymentIntent != null) {
-        print("Payment Intent Created: $paymentIntent");
-      }
+      String? paymentIntentClientSecret = await _createPaymentIntent(totalAmount, "usd");
+      if (paymentIntentClientSecret == null) return false;
+
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: paymentIntentClientSecret,
+          merchantDisplayName: "LefMob",
+        ),
+      );
+
+      return await _processPayment();
     } catch (e) {
       print("Error in makePayment: $e");
+      return false;
     }
   }
 
@@ -29,6 +37,7 @@ class StripeService {
         "https://api.stripe.com/v1/payment_intents",
         data: data,
         options: Options(
+          contentType: Headers.formUrlEncodedContentType,
           headers: {
             "Authorization": "Bearer $stripeSecretKey",
             "Content-Type": "application/x-www-form-urlencoded"
@@ -37,8 +46,7 @@ class StripeService {
       );
 
       if (response.data != null) {
-        print(response.data);
-        return response.data['id'];
+        return response.data["client_secret"];
       }
       return null;
     } catch (e) {
@@ -47,8 +55,18 @@ class StripeService {
     }
   }
 
+  Future<bool> _processPayment() async {
+    try {
+      await Stripe.instance.presentPaymentSheet();
+      await Stripe.instance.confirmPaymentSheetPayment();
+      return true;
+    } catch (e) {
+      print("Error in _processPayment: $e");
+      return false;
+    }
+  }
+
   String _calculateAmount(int amount) {
-    final calculateAmount = amount * 100;
-    return calculateAmount.toString();
+    return (amount * 100).toString(); // Convert to cents
   }
 }
