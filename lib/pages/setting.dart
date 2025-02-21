@@ -3,7 +3,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:io';
 import 'login.dart';
 
@@ -17,7 +16,8 @@ class AccountSettingsPage extends StatefulWidget {
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController currentPasswordController = TextEditingController();
+  final TextEditingController currentPasswordController =
+      TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final User? user = FirebaseAuth.instance.currentUser;
   File? _profileImage;
@@ -31,7 +31,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   Future<void> _fetchUserData() async {
     if (user != null) {
-      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         fullNameController.text = data['fullName'] ?? '';
@@ -51,7 +54,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   Future<void> _uploadImage() async {
     if (_profileImage != null) {
-      final fileName = 'profile_pictures/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'profile_pictures/${DateTime.now().millisecondsSinceEpoch}.jpg';
       try {
         final ref = FirebaseStorage.instance.ref().child(fileName);
         await ref.putFile(_profileImage!);
@@ -59,7 +63,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
         print('Image uploaded! URL: $downloadUrl');
 
         // Save image URL to Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user!.uid).update({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .update({
           'profileImageUrl': downloadUrl,
         });
       } catch (e) {
@@ -71,11 +78,13 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   Future<void> _saveUserData() async {
     if (user != null) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(user!.uid).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .set({
           'fullName': fullNameController.text.trim(),
           'phone': phoneController.text.trim(),
-          // Include any other fields you need
-        }, SetOptions(merge: true)); // Merge to update existing fields
+        }, SetOptions(merge: true));
         print('User data saved successfully');
       } catch (e) {
         print('Error saving user data: $e');
@@ -84,9 +93,9 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   }
 
   Future<void> _updatePassword() async {
-    if (currentPasswordController.text.isNotEmpty && newPasswordController.text.isNotEmpty) {
+    if (currentPasswordController.text.isNotEmpty &&
+        newPasswordController.text.isNotEmpty) {
       try {
-        // Reauthenticate the user before updating the password
         AuthCredential credential = EmailAuthProvider.credential(
           email: user!.email!,
           password: currentPasswordController.text,
@@ -104,7 +113,6 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   Future<void> _signOut() async {
     try {
       await FirebaseAuth.instance.signOut();
-      await GoogleSignIn().signOut();
       print('User logged out successfully');
     } catch (e) {
       print('Logout failed: $e');
@@ -143,7 +151,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             const SizedBox(height: 20),
             CircleAvatar(
               radius: 40,
-              backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+              backgroundImage:
+                  _profileImage != null ? FileImage(_profileImage!) : null,
               backgroundColor: Colors.grey[300],
               child: IconButton(
                 icon: const Icon(Icons.camera_alt, color: Colors.white),
@@ -151,18 +160,21 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text('Update picture', style: TextStyle(fontSize: 16, color: Colors.black54)),
+            const Text('Update picture',
+                style: TextStyle(fontSize: 16, color: Colors.black54)),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () async {
                 await _uploadImage();
-                await _saveUserData(); // Save user data after uploading image
+                await _saveUserData();
               },
               child: const Text('Save Picture & Data'),
             ),
             const SizedBox(height: 30),
-            buildAccountInfoRow('Full Name', fullNameController.text, true, fullNameController),
-            buildAccountInfoRow('Email', user?.email ?? 'No Email', false, null),
+            buildAccountInfoRow(
+                'Full Name', fullNameController.text, true, fullNameController),
+            buildAccountInfoRow(
+                'Email', user?.email ?? 'No Email', false, null),
             buildPasswordRow(),
           ],
         ),
@@ -170,13 +182,15 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
     );
   }
 
-  Widget buildAccountInfoRow(String label, String value, bool isEditable, TextEditingController? controller) {
+  Widget buildAccountInfoRow(String label, String value, bool isEditable,
+      TextEditingController? controller) {
     return Column(
       children: [
         ListTile(
           title: Text(label),
           subtitle: Text(value, style: const TextStyle(color: Colors.blue)),
-          trailing: isEditable ? const Icon(Icons.arrow_forward_ios, size: 16) : null,
+          trailing:
+              isEditable ? const Icon(Icons.arrow_forward_ios, size: 16) : null,
           onTap: isEditable && controller != null
               ? () {
                   showDialog(
@@ -186,7 +200,8 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                         title: Text('Edit $label'),
                         content: TextField(
                           controller: controller,
-                          decoration: InputDecoration(hintText: 'Enter your $label'),
+                          decoration:
+                              InputDecoration(hintText: 'Enter your $label'),
                         ),
                         actions: [
                           TextButton(
@@ -231,13 +246,15 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     children: [
                       TextField(
                         controller: currentPasswordController,
-                        decoration: const InputDecoration(hintText: 'Current Password'),
+                        decoration:
+                            const InputDecoration(hintText: 'Current Password'),
                         obscureText: true,
                       ),
                       const SizedBox(height: 10),
                       TextField(
                         controller: newPasswordController,
-                        decoration: const InputDecoration(hintText: 'New Password'),
+                        decoration:
+                            const InputDecoration(hintText: 'New Password'),
                         obscureText: true,
                       ),
                     ],
