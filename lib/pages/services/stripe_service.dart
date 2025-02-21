@@ -1,29 +1,46 @@
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dio/dio.dart';
-import 'package:lef_mob/pages/const.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:lef_mob/pages/const.dart';
+import 'package:uuid/uuid.dart';
 
 class StripeService {
-  StripeService._(); // Singleton instance creation
+  StripeService._();
 
   static final StripeService instance = StripeService._();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Uuid _uuid = Uuid();
 
-  Future<void> makePayment(double totalPrice) async {
+  Future<String?> makePayment(String userId, double totalPrice) async {
     try {
       String? paymentIntentClientSecret = await _createPaymentIntent(
-      totalPrice.toInt(),
+        totalPrice.toInt(),
         "LKR"
-        );
-      if (paymentIntentClientSecret == null) return;
+      );
+
+      if (paymentIntentClientSecret == null) return null;
+
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: paymentIntentClientSecret,
           merchantDisplayName: "LefMob",
         ),
       );
-      await _processPayment();
-      
+
+      await Stripe.instance.presentPaymentSheet();
+      await Stripe.instance.confirmPaymentSheetPayment();
+
+      // Generate a unique QR Code data
+      String qrCodeData = _uuid.v4();
+
+      // Store Payment Details in Firebase
+      await _storePaymentDetails(userId, totalPrice, qrCodeData);
+
+      return qrCodeData; // Return QR Code Data
     } catch (e) {
-      print("Error in makePayment: $e");
+      print("Payment Failed: $e");
+      return null;
     }
   }
 
@@ -39,9 +56,9 @@ class StripeService {
         "https://api.stripe.com/v1/payment_intents",
         data: data,
         options: Options(
-          contentType :Headers.formUrlEncodedContentType,
+          contentType: Headers.formUrlEncodedContentType,
           headers: {
-            "Authorization": "Bearer $stripeSecretKey",
+            "Authorization": " Bearer $stripeSecretKey",
             "Content-Type": "application/x-www-form-urlencoded"
           },
         ),
@@ -58,18 +75,17 @@ class StripeService {
     }
   }
 
-  Future<void> _processPayment() async {
-    try{
-      await Stripe.instance.presentPaymentSheet();
-      await Stripe.instance.confirmPaymentSheetPayment();
-
-    }catch(e){
-      print(e);
-    }
+  Future<void> _storePaymentDetails(
+      String userId, double amount, String qrCodeData) async {
+    await _firestore.collection('users').doc(userId).collection('payment_status').add({
+      'amount': amount,
+      'status': 'successful',
+      'timestamp': FieldValue.serverTimestamp(),
+      'qr_code_data': qrCodeData,
+    });
   }
 
   String _calculateAmount(int amount) {
-    final calculateAmount = amount * 100;
-    return calculateAmount.toString();
+    return (amount * 100).toString(); // Convert Rs. to cents
   }
 }

@@ -55,6 +55,8 @@ dependencies:
   dio: ^5.8.0+1
   country_code_picker: ^3.2.0
   flutter_email_sender: ^7.0.0
+  uuid: ^4.5.1
+  carousel_slider: ^5.0.0
 
   
 
@@ -98,6 +100,11 @@ flutter:
   - lib/assets/google.jpg
   - lib/assets/profile.png
   - lib/assets/logo2.png
+  - lib/assets/event1.jpg
+  - lib/assets/event2.jpg
+  - lib/assets/event3.jpg
+  
+
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -1,11 +1,12 @@
-import 'dart:io';
-import 'dart:typed_data';
+//import 'dart:io';
+//import 'dart:typed_data';
 //import 'dart:ui';
 import 'package:country_code_picker/country_code_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter/rendering.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:lef_mob/pages/eventbooking/qr_code_screen.dart';
 import 'package:lef_mob/pages/services/stripe_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -155,10 +156,20 @@ class _BookingPageState extends State<BookingPage> {
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     double totalPrice = _numberOfTickets * _ticketPrice;
-                    StripeService.instance.makePayment(totalPrice);
+                    String userId = "example_user_id"; // Get from Auth
+                    String? qrCodeData = await StripeService.instance.makePayment(userId, totalPrice);
+
+                    if (qrCodeData != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QRCodeScreen(qrCodeData: qrCodeData),
+                        ),
+                      );
+                    }
                   }
                 },
                   style: ElevatedButton.styleFrom(
