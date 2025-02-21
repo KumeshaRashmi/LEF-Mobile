@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
+//import 'dart:ui';
+import 'package:country_code_picker/country_code_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+//import 'package:flutter/rendering.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:lef_mob/pages/services/stripe_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -21,73 +23,40 @@ class BookingPage extends StatefulWidget {
 class _BookingPageState extends State<BookingPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _ticketsController = TextEditingController();
-  final TextEditingController _cardHolderNameController = TextEditingController();
-  final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryMonthController = TextEditingController();
-  final TextEditingController _expiryYearController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
-  String _cardType = 'Visa';
+  String _selectedCountryCode = '+94';
   String? _qrData;
   final GlobalKey _qrKey = GlobalKey();
 
   double _ticketPrice = 0.0;
   int _numberOfTickets = 0;
+
   @override
   void initState() {
     super.initState();
     _ticketPrice = double.parse(widget.event['ticketPrice']);
+    _loadUserDetails();
+  }
+
+  Future<void> _loadUserDetails() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _nameController.text = user.displayName ?? '';
+      _emailController.text = user.email ?? '';
+    }
   }
 
   void _confirmBooking() {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _qrData = 'Name: ${_nameController.text}\n'
-            'Phone: ${_phoneController.text}\n'
+            'Email: ${_emailController.text}\n'
+            'Phone: $_selectedCountryCode ${_phoneController.text}\n'
             'Tickets: ${_ticketsController.text}\n'
             'Event: ${widget.event['title']}';
       });
-    }
-  }
-
-  Future<void> _downloadQRCode() async {
-    try {
-      RenderRepaintBoundary boundary = _qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      var image = await boundary.toImage();
-      ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
-
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/ticket.png');
-      await file.writeAsBytes(pngBytes);
-
-      final pdf = pw.Document();
-      pdf.addPage(
-        pw.Page(
-          build: (pw.Context context) {
-            return pw.Column(
-              children: [
-                pw.Text('Name: ${_nameController.text}'),
-                pw.Text('Tickets: ${_ticketsController.text}'),
-                pw.SizedBox(height: 16),
-                pw.Image(pw.MemoryImage(pngBytes), width: 200, height: 200),
-              ],
-            );
-          },
-        ),
-      );
-
-      final pdfFile = File('${directory.path}/ticket.pdf');
-      await pdfFile.writeAsBytes(await pdf.save());
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ticket saved as PNG and PDF in ${directory.path}')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving ticket: $e')),
-      );
     }
   }
 
@@ -110,26 +79,45 @@ class _BookingPageState extends State<BookingPage> {
                   labelText: 'Name',
                   prefixIcon: Icon(Icons.person),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
+                readOnly: true, // Auto-filled from Firebase
               ),
               TextFormField(
-                controller: _phoneController,
+                controller: _emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Telephone Number',
-                  prefixIcon: Icon(Icons.phone),
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
                 ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your telephone number';
-                  }
-                  return null;
-                },
+                readOnly: true, // Auto-filled from Firebase
+              ),
+              Row(
+                children: [
+                  CountryCodePicker(
+                    onChanged: (code) {
+                      setState(() {
+                        _selectedCountryCode = code.dialCode!;
+                      });
+                    },
+                    initialSelection: 'LK',
+                    favorite: ['+94', 'US', 'IN'],
+                    showFlag: true,
+                  ),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'Phone Number',
+                        prefixIcon: Icon(Icons.phone),
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your phone number';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
               ),
               TextFormField(
                 controller: _ticketsController,
@@ -165,122 +153,19 @@ class _BookingPageState extends State<BookingPage> {
                   ),
                 ),
               const SizedBox(height: 16),
-              const Text('Card Payment Details', style: TextStyle(fontWeight: FontWeight.bold)),
-              DropdownButtonFormField<String>(
-                value: _cardType,
-                decoration: const InputDecoration(
-                  labelText: 'Card Type',
-                  prefixIcon: Icon(Icons.credit_card),
-                ),
-                items: ['Visa', 'MasterCard'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _cardType = newValue!;
-                  });
-                },
-              ),
-              TextFormField(
-                controller: _cardHolderNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Card Holder Name',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the card holder name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _cardNumberController,
-                decoration: const InputDecoration(
-                  labelText: 'Card Number',
-                  prefixIcon: Icon(Icons.credit_card),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your card number';
-                  }
-                  return null;
-                },
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _expiryMonthController,
-                      decoration: const InputDecoration(
-                        labelText: 'Expiry Month (MM)',
-                        prefixIcon: Icon(Icons.date_range),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the expiry month';
-                        }
-                        final month = int.tryParse(value);
-                        if (month == null || month < 1 || month > 12) {
-                          return 'Please enter a valid month';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _expiryYearController,
-                      decoration: const InputDecoration(
-                        labelText: 'Expiry Year (YY)',
-                        prefixIcon: Icon(Icons.date_range),
-                      ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the expiry year';
-                        }
-                        final year = int.tryParse(value);
-                        if (year == null || year < 0 || year > 99) {
-                          return 'Please enter a valid year';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              TextFormField(
-                controller: _cvvController,
-                decoration: const InputDecoration(
-                  labelText: 'CVV',
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the CVV';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed:(){
-                    StripeService.instance.makePayment();
-                  },
+                  onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    double totalPrice = _numberOfTickets * _ticketPrice;
+                    StripeService.instance.makePayment(totalPrice);
+                  }
+                },
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Colors.red,
                   ),
-                  child: const Text('Confirm Booking'),
+                  child: const Text('Proceed to Payment'),
                 ),
               ),
               const SizedBox(height: 16),

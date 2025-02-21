@@ -5,6 +5,8 @@ import 'resetpasswordverification.dart';
 class ResetPasswordPage extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
 
+  ResetPasswordPage({super.key});
+
   Future<void> _sendPasswordResetEmail(BuildContext context) async {
     try {
       final String email = emailController.text.trim();

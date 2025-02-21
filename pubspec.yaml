@@ -53,6 +53,9 @@ dependencies:
   firebase_app_check: ^0.3.2
   flutter_stripe: ^11.4.0
   dio: ^5.8.0+1
+  country_code_picker: ^3.2.0
+  flutter_email_sender: ^7.0.0
+
   
 
 dev_dependencies:
