@@ -126,19 +126,6 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
               ),
               const SizedBox(height: 16),
 
-              // Map Section
-              Container(
-                height: 150,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[300],
-                ),
-                child: const Center(
-                  child: Text('Map Placeholder'),
-                ),
-              ),
-              const SizedBox(height: 16),
-
               // Description Section
               Text(
                 'Program Details:',

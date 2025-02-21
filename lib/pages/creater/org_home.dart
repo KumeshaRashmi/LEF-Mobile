@@ -11,11 +11,11 @@ class OrgHomePage extends StatefulWidget {
   final String email;
 
   const OrgHomePage({
-    Key? key,
+    super.key,
     required this.profileImageUrl,
     required this.displayName,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   _OrgHomePageState createState() => _OrgHomePageState();
@@ -311,11 +311,11 @@ class _OrgHomePageState extends State<OrgHomePage> {
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _createEvent,
-                    child: const Text('Create Event'),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.redAccent,
                     ),
+                    child: const Text('Create Event'),
                   ),
           ],
         ),

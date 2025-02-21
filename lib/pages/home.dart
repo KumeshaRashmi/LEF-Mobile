@@ -4,6 +4,7 @@ import 'eventdetails.dart';
 import 'favourites.dart';
 import 'profile.dart';
 import 'setting.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class Home extends StatefulWidget {
   final String profileImageUrl;
@@ -11,11 +12,11 @@ class Home extends StatefulWidget {
   final String email;
 
   const Home({
-    Key? key,
+    super.key,
     required this.profileImageUrl,
     required this.displayName,
     required this.email,
-  }) : super(key: key);
+  });
 
   @override
   _HomeState createState() => _HomeState();
@@ -98,11 +99,11 @@ class HomePageContent extends StatefulWidget {
   final String profileImageUrl;
 
   const HomePageContent({
-    Key? key,
+    super.key,
     required this.onFavorite,
     required this.displayName,
     required this.profileImageUrl,
-  }) : super(key: key);
+  });
 
   @override
   _HomePageContentState createState() => _HomePageContentState();
@@ -112,6 +113,12 @@ class _HomePageContentState extends State<HomePageContent> {
   String selectedLocation = 'All';
   String selectedCategory = 'All';
   String searchQuery = '';
+
+  List<String> carouselImages = [
+    'lib/assets/event1.jpg',
+    'lib/assets/event2.jpg',
+    'lib/assets/event3.jpg',
+  ];
 
   final List<String> sriLankanLocations = [
     'All',
@@ -165,7 +172,7 @@ class _HomePageContentState extends State<HomePageContent> {
   void _fetchEvents() async {
     final snapshot = await FirebaseFirestore.instance.collection('events').get();
     setState(() {
-      events.addAll(snapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList());
+      events.addAll(snapshot.docs.map((doc) => doc.data()).toList());
     });
   }
 
@@ -184,7 +191,7 @@ class _HomePageContentState extends State<HomePageContent> {
 
   return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -240,8 +247,32 @@ class _HomePageContentState extends State<HomePageContent> {
                 ],
               ),
             ),
+            //carousel
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 200.0,
+                autoPlay: true,
+                enlargeCenterPage: true,
+              ),
+              items: carouselImages.map((image) {
+                return Container(
+                  width: MediaQuery.of(context).size.width,
+                  margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: DecorationImage(
+                      image: AssetImage(image),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+
             // Dropdowns for Location and Category
+              const SizedBox(height: 20),
             Row(
+            
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(

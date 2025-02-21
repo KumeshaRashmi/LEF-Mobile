@@ -15,7 +15,6 @@ plugins {
     id 'org.jetbrains.kotlin.android' apply false
 }
 
-// Ensure repositories are available for all projects
 allprojects {
     repositories {
         google()

@@ -146,7 +146,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         setState(() {
           favoriteEvents = snapshot.docs
               .map((doc) {
-                var data = doc.data() as Map<String, dynamic>;
+                var data = doc.data();
                 data['id'] = doc.id; // Include the Firestore document ID
                 return data;
               })
